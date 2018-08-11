@@ -83,6 +83,7 @@ public class Game : MonoBehaviour
 	    {
 	        if (!r.Contains(food.transform.position))
 	        {
+	            food.GetComponent<Food>().IsDestroyedByWall = true;
 	            collectedFood.Add(food);
 	        }
 	    }
@@ -101,9 +102,10 @@ public class Game : MonoBehaviour
     private IEnumerator DestroyFoodCoroutine(GameObject food)
     {
         const float duration = 0.5f;
+        bool isDestroyedByWall = food.GetComponent<Food>().IsDestroyedByWall;
         Material m = food.GetComponent<Renderer>().material;
         Vector3 sourceScale = food.transform.localScale;
-        Vector3 targetScale = food.transform.localScale * 2f;
+        Vector3 targetScale = food.transform.localScale * (isDestroyedByWall ? 0.5f : 2f);
         for (float f = 0f; f < duration; f += Time.deltaTime)
         {
             float t = FoodCollectCurve.Evaluate(f / duration);
