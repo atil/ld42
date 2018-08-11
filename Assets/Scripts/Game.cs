@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -7,6 +8,7 @@ using UnityEngine.UI;
 public class Game : MonoBehaviour
 {
     public AnimationCurve WallCollectCurve;
+    public AnimationCurve FoodCollectCurve;
 
     public Wall[] Walls;
     public Player Player;
@@ -90,11 +92,32 @@ public class Game : MonoBehaviour
 	        RefreshFood();
 	        foreach (GameObject food in collectedFood)
 	        {
-	            Destroy(food.gameObject);
+	            StartCoroutine(DestroyFoodCoroutine(food));
 	            Foods.Remove(food);
 	        }
         }
 	}
+
+    private IEnumerator DestroyFoodCoroutine(GameObject food)
+    {
+        const float duration = 0.5f;
+        Material m = food.GetComponent<Renderer>().material;
+        Vector3 sourceScale = food.transform.localScale;
+        Vector3 targetScale = food.transform.localScale * 2f;
+        for (float f = 0f; f < duration; f += Time.deltaTime)
+        {
+            float t = FoodCollectCurve.Evaluate(f / duration);
+            Color c = m.color;
+            c.a = Mathf.Lerp(1f, 0f, t);
+            m.color = c;
+
+            food.transform.localScale = Vector3.Lerp(sourceScale, targetScale, t);
+
+            yield return null;
+        }
+
+        Destroy(food);
+    }
 
     private void RefreshFood()
     {
