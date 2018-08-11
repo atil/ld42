@@ -21,7 +21,7 @@ public class Wall : MonoBehaviour
         UpdateInternal();
     }
 
-    void Update ()
+    public void Tick ()
 	{
 	    UpdateInternal();
 	}

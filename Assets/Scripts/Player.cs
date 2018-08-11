@@ -19,7 +19,7 @@ public class Player : MonoBehaviour
         Points.Add(transform.position + Vector3.up);
     }
 
-    void Update()
+    public void Tick()
     {
         Vector3 firstDir = (Points[0] - Points[1]).normalized;
         Vector3 lastDir = (Points[Points.Count - 2] - Points[Points.Count - 1]).normalized;

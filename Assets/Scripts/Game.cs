@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class Game : MonoBehaviour
@@ -13,8 +14,10 @@ public class Game : MonoBehaviour
     public GameObject FoodPrefab;
 
     public Text ScoreText;
+    public GameObject GameOverRoot;
 
     private int _score;
+    private bool _isRunning = true;
 
     void Start()
     {
@@ -26,20 +29,33 @@ public class Game : MonoBehaviour
         RefreshFood();
     }
 
-    void Update ()
+    void Update()
 	{
+	    if (!_isRunning)
+	    {
+	        if (Input.anyKeyDown)
+	        {
+	            SceneManager.LoadScene("Game");
+	        }
+	        return;
+	    }
+
+        Player.Tick();
+	    foreach (Wall wall in Walls)
+	    {
+	        wall.Tick();
+	    }
+
         Rect r = GetRekt();
 
-	    if (Player.Points.Exists(p => !r.Contains(p)))
+	    if (!r.Contains(Player.Points[0]))
 	    {
-            // game over
-	        Debug.Log("gameover 1");
+            GameOver();
         }
 
         if (IsIntersectingWithItself())
 	    {
-            // game over
-            Debug.Log("gameover 2");
+            GameOver();
         }
 
         List<GameObject> collectedFood = new List<GameObject>();
@@ -84,9 +100,15 @@ public class Game : MonoBehaviour
     {
         Rect r = GetRekt();
 
-        Vector3 randomPoint;
+        Vector3 randomPoint = Vector3.zero;
+        int tryCount = 1000;
         do
         {
+            if (tryCount-- < 0)
+            {
+                break;
+            }
+
             randomPoint = new Vector3(Random.Range(r.xMin, r.xMax), Random.Range(r.yMin, r.yMax), 0);
         } while (r.size.sqrMagnitude > 0.001f && Vector3.Distance(randomPoint, Player.transform.position) < 1f);
 
@@ -134,6 +156,12 @@ public class Game : MonoBehaviour
             yMax = ymax,
             yMin = ymin,
         };
+    }
+
+    private void GameOver()
+    {
+        _isRunning = false;
+        GameOverRoot.SetActive(true);
     }
 
     // https://stackoverflow.com/questions/4543506/algorithm-for-intersection-of-2-lines
