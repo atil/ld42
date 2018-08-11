@@ -1,19 +1,39 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class Game : MonoBehaviour
 {
+    public AnimationCurve WallCollectCurve;
+
     public Wall[] Walls;
     public Player Player;
+    public List<GameObject> Foods = new List<GameObject>();
+    public GameObject FoodPrefab;
 
-	void Update ()
+    public Text ScoreText;
+
+    private int _score;
+
+    void Start()
+    {
+        foreach (Wall wall in Walls)
+        {
+            wall.Init();
+        }
+
+        RefreshFood();
+    }
+
+    void Update ()
 	{
         Rect r = GetRekt();
 
 	    if (Player.Points.Exists(p => !r.Contains(p)))
 	    {
             // game over
-	        //Debug.Log("gameover 1");
+	        Debug.Log("gameover 1");
         }
 
         if (IsIntersectingWithItself())
@@ -22,7 +42,56 @@ public class Game : MonoBehaviour
             Debug.Log("gameover 2");
         }
 
+        List<GameObject> collectedFood = new List<GameObject>();
+	    foreach (GameObject food in Foods)
+	    {
+	        CircleCollider2D c = food.GetComponent<CircleCollider2D>();
+	        if (Vector3.Distance(c.transform.position, Player.HeadCollider.transform.position) < c.radius + Player.HeadCollider.radius + 0.1f)
+	        {
+	            Player.CollectFood();
+	            _score++;
+	            ScoreText.text = _score.ToString();
+
+                foreach (Wall wall in Walls)
+	            {
+	                wall.OnFoodCollected(WallCollectCurve);
+	            }
+
+                collectedFood.Add(food);
+	        }
+	    }
+
+	    foreach (GameObject food in Foods)
+	    {
+	        if (!r.Contains(food.transform.position))
+	        {
+	            collectedFood.Add(food);
+	        }
+	    }
+
+	    if (collectedFood.Count > 0)
+	    {
+	        RefreshFood();
+	        foreach (GameObject food in collectedFood)
+	        {
+	            Destroy(food.gameObject);
+	            Foods.Remove(food);
+	        }
+        }
 	}
+
+    private void RefreshFood()
+    {
+        Rect r = GetRekt();
+
+        Vector3 randomPoint;
+        do
+        {
+            randomPoint = new Vector3(Random.Range(r.xMin, r.xMax), Random.Range(r.yMin, r.yMax), 0);
+        } while (r.size.sqrMagnitude > 0.001f && Vector3.Distance(randomPoint, Player.transform.position) < 1f);
+
+        Foods.Add(Instantiate(FoodPrefab, randomPoint, Quaternion.identity));
+    }
 
     public bool IsIntersectingWithItself()
     {

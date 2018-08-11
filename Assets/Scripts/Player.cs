@@ -4,8 +4,12 @@ using UnityEngine;
 
 public class Player : MonoBehaviour
 {
+    public Transform Head;
+    public CircleCollider2D HeadCollider;
     public LineRenderer LineRenderer;
-    private static float Speed = 0.8f;
+
+    private const float Speed = 1f;
+    private bool _isCollecting;
 
     public List<Vector3> Points = new List<Vector3>();
 
@@ -21,7 +25,11 @@ public class Player : MonoBehaviour
         Vector3 lastDir = (Points[Points.Count - 2] - Points[Points.Count - 1]).normalized;
 
         Points[0] += firstDir * Speed * Time.deltaTime;
-        Points[Points.Count - 1] += lastDir * Speed * Time.deltaTime;
+
+        if (!_isCollecting)
+        {
+            Points[Points.Count - 1] += lastDir * Speed * Time.deltaTime;
+        }
 
         Vector3 input;
         if (GetInput(firstDir, out input))
@@ -36,6 +44,7 @@ public class Player : MonoBehaviour
 
         LineRenderer.positionCount = Points.Count;
         LineRenderer.SetPositions(Points.ToArray());
+        Head.transform.position = Points[0];
     }
    
 
@@ -69,4 +78,15 @@ public class Player : MonoBehaviour
         return false;
     }
 
+    public void CollectFood()
+    {
+        StartCoroutine(CollectCoroutine());
+    }
+
+    private IEnumerator CollectCoroutine()
+    {
+        _isCollecting = true;
+        yield return new WaitForSeconds(0.025f);
+        _isCollecting = false;
+    }
 }
